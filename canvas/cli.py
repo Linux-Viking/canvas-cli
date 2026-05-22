@@ -449,11 +449,22 @@ def view_discussion(ctx, topic_id, entry_id):
 
 @discuss.command(name="reply")
 @click.argument('topic_id')
-@click.argument('message')
+@click.argument('message', required=False)
+@click.option('--file', type=click.Path(exists=True), help="Path to a plain text file (.txt, .md) containing your reply. Newlines are automatically preserved.")
 @click.option('--entry-id', help="The ID of a specific student's reply to thread your response under.")
 @click.pass_context
-def reply_discussion(ctx, topic_id, message, entry_id):
+def reply_discussion(ctx, topic_id, message, file, entry_id):
     """Post a reply to a discussion topic or a specific entry."""
+    if not message and not file:
+        click.secho("Error: You must provide either a MESSAGE argument or use the --file option.", fg="red")
+        return
+        
+    if file:
+        with open(file, 'r', encoding='utf-8') as f:
+            raw_content = f.read()
+    else:
+        raw_content = message
+
     course_id = ctx.obj['COURSE_ID']
     topic_id = config.resolve_alias(topic_id)
     
@@ -465,7 +476,7 @@ def reply_discussion(ctx, topic_id, message, entry_id):
         endpoint = f'/api/v1/courses/{course_id}/discussion_topics/{topic_id}/entries'
     
     # Canvas expects HTML. Convert literal newlines or escaped '\n' to <br> tags.
-    formatted_message = message.replace('\\n', '<br>').replace('\n', '<br>')
+    formatted_message = raw_content.replace('\\n', '<br>').replace('\n', '<br>')
     
     payload = {
         'message': formatted_message
