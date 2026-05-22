@@ -388,13 +388,32 @@ def strip_tags(html_content):
 
 @discuss.command(name="view")
 @click.argument('topic_id')
+@click.option('--entry-id', help="The ID of a specific student's reply to view threaded responses.")
 @click.pass_context
-def view_discussion(ctx, topic_id):
+def view_discussion(ctx, topic_id, entry_id):
     """View the prompt and replies for a discussion topic."""
     course_id = ctx.obj['COURSE_ID']
     topic_id = config.resolve_alias(topic_id)
     
     try:
+        if entry_id:
+            # Get the specific entry and its replies
+            entries_res = api.make_request('GET', f'/api/v1/courses/{course_id}/discussion_topics/{topic_id}/entries/{entry_id}/replies', params={'per_page': 50})
+            entries = entries_res.json()
+            
+            if not entries:
+                click.secho("\nNo threaded replies yet for this entry.", fg="yellow")
+                return
+                
+            click.secho(f"\n--- {len(entries)} Threaded Replies to Entry {entry_id} ---", fg="cyan", bold=True)
+            for entry in entries:
+                author = entry.get('user_name', 'Unknown Student')
+                date = entry.get('created_at', '')[:10]
+                reply_id = entry.get('id')
+                click.secho(f"\n>> {author} ({date}) [Reply ID: {reply_id}]:", fg="green")
+                click.echo(strip_tags(entry.get('message', '')))
+            return
+
         # Get the main topic prompt
         topic_res = api.make_request('GET', f'/api/v1/courses/{course_id}/discussion_topics/{topic_id}')
         topic_data = topic_res.json()
@@ -418,7 +437,11 @@ def view_discussion(ctx, topic_id):
             author = entry.get('user_name', 'Unknown Student')
             date = entry.get('created_at', '')[:10]
             entry_id = entry.get('id')
-            click.secho(f"\n> {author} ({date}) [Entry ID: {entry_id}]:", fg="green")
+            
+            # Check if there are any threaded replies to this entry
+            has_replies = " (Has threaded replies)" if entry.get('has_more_replies') or entry.get('recent_replies') else ""
+            
+            click.secho(f"\n> {author} ({date}) [Entry ID: {entry_id}]{has_replies}:", fg="green")
             click.echo(strip_tags(entry.get('message', '')))
             
     except Exception as e:
