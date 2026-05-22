@@ -464,8 +464,11 @@ def reply_discussion(ctx, topic_id, message, entry_id):
         click.echo(f"Posting top-level reply to topic {topic_id}...")
         endpoint = f'/api/v1/courses/{course_id}/discussion_topics/{topic_id}/entries'
     
+    # Canvas expects HTML. Convert literal newlines or escaped '\n' to <br> tags.
+    formatted_message = message.replace('\\n', '<br>').replace('\n', '<br>')
+    
     payload = {
-        'message': message
+        'message': formatted_message
     }
     
     try:
