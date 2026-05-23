@@ -101,14 +101,12 @@ def list_assignments(ctx):
         item_id = item.get('content_id', item['id']) 
         click.echo(f"{item_id:<10} | {item['type']:<12} | {item['title']}")
 
-@module.group(cls=HelpGroup, invoke_without_command=True)
+@module.group(cls=HelpGroup)
 @click.argument('item_id')
 @click.pass_context
 def item(ctx, item_id):
     """Interact with a specific item."""
     ctx.obj['ITEM_ID'] = config.resolve_alias(item_id)
-    if ctx.invoked_subcommand is None:
-        ctx.invoke(item_details)
 
 @item.command(name="details")
 @click.pass_context
