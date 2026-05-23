@@ -1,6 +1,29 @@
 import click
+import html.parser
+import os
+import mimetypes
+import requests
 from . import config
 from . import api
+
+class MLStripper(html.parser.HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.reset()
+        self.strict = False
+        self.convert_charrefs = True
+        self.text = []
+    def handle_data(self, d):
+        self.text.append(d)
+    def get_data(self):
+        return ''.join(self.text)
+
+def strip_tags(html_content):
+    if not html_content:
+        return ""
+    s = MLStripper()
+    s.feed(html_content)
+    return s.get_data().strip()
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
@@ -78,12 +101,14 @@ def list_assignments(ctx):
         item_id = item.get('content_id', item['id']) 
         click.echo(f"{item_id:<10} | {item['type']:<12} | {item['title']}")
 
-@module.group(cls=HelpGroup)
+@module.group(cls=HelpGroup, invoke_without_command=True)
 @click.argument('item_id')
 @click.pass_context
 def item(ctx, item_id):
     """Interact with a specific item."""
     ctx.obj['ITEM_ID'] = config.resolve_alias(item_id)
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(item_details)
 
 @item.command(name="details")
 @click.pass_context
@@ -113,21 +138,48 @@ def item_details(ctx):
         response = api.make_request('GET', f'/api/v1/courses/{course_id}/modules/{module_id}/items/{real_item_id}')
         data = response.json()
         
+        item_type = data.get('type')
+        content_id = data.get('content_id')
+
         click.secho(f"--- Item Details: {data.get('title', 'Unknown')} ---", fg="blue", bold=True)
-        click.echo(f"Type: {data.get('type')}")
+        click.echo(f"Type: {item_type}")
         click.echo(f"URL: {data.get('html_url')}")
         
-        if 'content_id' in data:
-            click.echo(f"\nIf you want to submit this item, use Assignment ID: {data['content_id']}")
-            click.secho(f"Command: canvas-cli submit <filepath> {course_id} {data['content_id']}", fg="yellow")
+        if item_type == 'Assignment' and content_id:
+            # Fetch assignment details
+            assign_res = api.make_request('GET', f'/api/v1/courses/{course_id}/assignments/{content_id}')
+            assign_data = assign_res.json()
+            click.echo("-" * 40)
+            click.secho("Description:", bold=True)
+            click.echo(strip_tags(assign_data.get('description', 'No description.')))
+            click.echo("-" * 40)
+            if 'due_at' in assign_data:
+                click.echo(f"Due: {assign_data['due_at']}")
+            if 'points_possible' in assign_data:
+                click.echo(f"Points: {assign_data['points_possible']}")
+        elif item_type == 'Page' and 'page_url' in data:
+            page_url = data['page_url']
+            page_res = api.make_request('GET', f'/api/v1/courses/{course_id}/pages/{page_url}')
+            page_data = page_res.json()
+            click.echo("-" * 40)
+            click.secho("Content:", bold=True)
+            click.echo(strip_tags(page_data.get('body', 'No content.')))
+            click.echo("-" * 40)
+        elif item_type == 'DiscussionTopic' and content_id:
+            disc_res = api.make_request('GET', f'/api/v1/courses/{course_id}/discussion_topics/{content_id}')
+            disc_data = disc_res.json()
+            click.echo("-" * 40)
+            click.secho("Prompt:", bold=True)
+            click.echo(strip_tags(disc_data.get('message', 'No description.')))
+            click.echo("-" * 40)
+
+        if content_id:
+            click.echo(f"\nIf you want to submit this item, use Assignment ID: {content_id}")
+            click.secho(f"Command: canvas-cli submit <filepath> {course_id} {content_id}", fg="yellow")
             
     except requests.exceptions.RequestException as e:
          click.secho(f"Network Error: {e}", fg="red")
          raise click.Abort()
-
-import os
-import mimetypes
-import requests
 
 @cli.command()
 @click.argument('filepath', type=click.Path(exists=True))
@@ -365,26 +417,6 @@ def list_discussions(ctx):
     click.echo("-" * 50)
     for t in topics:
         click.echo(f"{t['id']:<12} | {t.get('title', 'No Title')}")
-
-import html.parser
-class MLStripper(html.parser.HTMLParser):
-    def __init__(self):
-        super().__init__()
-        self.reset()
-        self.strict = False
-        self.convert_charrefs = True
-        self.text = []
-    def handle_data(self, d):
-        self.text.append(d)
-    def get_data(self):
-        return ''.join(self.text)
-
-def strip_tags(html_content):
-    if not html_content:
-        return ""
-    s = MLStripper()
-    s.feed(html_content)
-    return s.get_data().strip()
 
 @discuss.command(name="view")
 @click.argument('topic_id')
