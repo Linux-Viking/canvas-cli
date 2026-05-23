@@ -121,6 +121,26 @@ def item_details(ctx):
             click.echo(f"\nIf you want to submit this item, use Assignment ID: {data['content_id']}")
             click.secho(f"Command: canvas-cli submit <filepath> {course_id} {data['content_id']}", fg="yellow")
             
+            # Fetch assignment details to show description
+            if data.get('type') == 'Assignment':
+                try:
+                    assignment_response = api.make_request('GET', f'/api/v1/courses/{course_id}/assignments/{data["content_id"]}')
+                    assignment_data = assignment_response.json()
+                    description_html = assignment_data.get('description')
+                    
+                    if description_html:
+                        from bs4 import BeautifulSoup
+                        soup = BeautifulSoup(description_html, 'html.parser')
+                        text = soup.get_text(separator='\n')
+                        # Basic cleanup: remove multiple consecutive newlines
+                        import re
+                        text = re.sub(r'\n\s*\n', '\n\n', text).strip()
+                        
+                        click.secho("\n--- Assignment Description ---", fg="cyan", bold=True)
+                        click.echo(text)
+                except Exception as e:
+                    click.secho(f"\nWarning: Could not fetch assignment details: {e}", fg="yellow")
+                    
     except requests.exceptions.RequestException as e:
          click.secho(f"Network Error: {e}", fg="red")
          raise click.Abort()
