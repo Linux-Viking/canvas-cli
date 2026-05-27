@@ -87,7 +87,21 @@ class HelpGroup(click.Group):
 @click.option('--no-color', is_flag=True, help="Disable ANSI color output.")
 @click.pass_context
 def cli(ctx, no_color):
-    """A command line interface for Canvas LMS (canvas-cli)."""
+    """
+    A command line interface for Canvas LMS (canvas-cli).
+    
+    Quick Example:
+    
+    1. List courses:  canvas list
+    
+    2. List modules:  canvas course <course_id> list
+    
+    3. View item:    canvas course <course_id> module <module_id> item <item_id> details
+    
+    4. Discussions:  canvas course <course_id> discuss list
+    
+    5. View Thread:   canvas course <course_id> discuss view <topic_id>
+    """
     ctx.ensure_object(dict)
     ctx.obj['NO_COLOR'] = no_color
 
@@ -216,15 +230,35 @@ def item_details(ctx):
             secho("Content:", bold=True)
             echo(strip_tags(page_data.get('body', 'No content.')))
             echo("-" * 40)
-        elif item_type == 'DiscussionTopic' and content_id:
+        elif item_type in ['DiscussionTopic', 'Discussion'] and content_id:
             disc_res = api.make_request('GET', f'/api/v1/courses/{course_id}/discussion_topics/{content_id}')
             disc_data = disc_res.json()
             echo("-" * 40)
             secho("Prompt:", bold=True)
             echo(strip_tags(disc_data.get('message', 'No description.')))
             echo("-" * 40)
+            secho(f"To view replies, use: canvas course {course_id} discuss view {content_id}", fg="cyan")
+        elif item_type == 'Quiz' and content_id:
+            quiz_res = api.make_request('GET', f'/api/v1/courses/{course_id}/quizzes/{content_id}')
+            quiz_data = quiz_res.json()
+            echo("-" * 40)
+            secho("Description:", bold=True)
+            echo(strip_tags(quiz_data.get('description', 'No description.')))
+            echo("-" * 40)
+            if 'due_at' in quiz_data:
+                echo(f"Due: {quiz_data['due_at']}")
+            if 'points_possible' in quiz_data:
+                echo(f"Points: {quiz_data['points_possible']}")
+        elif item_type == 'File' and content_id:
+            file_res = api.make_request('GET', f'/api/v1/courses/{course_id}/files/{content_id}')
+            file_data = file_res.json()
+            echo("-" * 40)
+            echo(f"Filename: {file_data.get('filename')}")
+            echo(f"Size:     {file_data.get('size', 0) // 1024} KB")
+            echo(f"Created:  {file_data.get('created_at')}")
+            echo("-" * 40)
 
-        if content_id:
+        if content_id and item_type == 'Assignment':
             echo(f"\nIf you want to submit this item, use Assignment ID: {content_id}")
             secho(f"Command: canvas-cli submit <filepath> {course_id} {content_id}", fg="yellow")
             
@@ -455,7 +489,11 @@ def discuss(ctx):
 @discuss.command(name="list")
 @click.pass_context
 def list_discussions(ctx):
-    """List discussion topics for the course."""
+    """
+    List discussion topics for the course.
+    
+    Example: canvas course cs101 discuss list
+    """
     course_id = ctx.obj['COURSE_ID']
     response = api.make_request('GET', f'/api/v1/courses/{course_id}/discussion_topics', params={'per_page': 100})
     topics = response.json()
@@ -474,7 +512,13 @@ def list_discussions(ctx):
 @click.option('--entry-id', help="The ID of a specific student's reply to view threaded responses.")
 @click.pass_context
 def view_discussion(ctx, topic_id, entry_id):
-    """View the prompt and replies for a discussion topic."""
+    """
+    View the prompt and replies for a discussion topic.
+    
+    Example: 
+    canvas course cs101 discuss view 555123
+    canvas course cs101 discuss view 555123 --entry-id 999888
+    """
     course_id = ctx.obj['COURSE_ID']
     topic_id = config.resolve_alias(topic_id)
     
@@ -537,7 +581,13 @@ def view_discussion(ctx, topic_id, entry_id):
 @click.option('--entry-id', help="The ID of a specific student's reply to thread your response under.")
 @click.pass_context
 def reply_discussion(ctx, topic_id, message, file, entry_id):
-    """Post a reply to a discussion topic or a specific entry."""
+    """
+    Post a reply to a discussion topic or a specific entry.
+    
+    Example:
+    canvas course cs101 discuss reply 555123 "My response"
+    canvas course cs101 discuss reply 555123 --file my_response.md
+    """
     if not message and not file:
         secho("Error: You must provide either a MESSAGE argument or use the --file option.", fg="red")
         return

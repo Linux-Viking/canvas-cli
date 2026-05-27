@@ -68,16 +68,37 @@ canvas-cli todo
 canvas-cli submit ./my_essay.pdf cs101 987654
 ```
 
-**5. Participate in a discussion**
+### 5. Participate in a discussion
+
+The CLI allows you to read, view threads, and reply to discussions.
+
+**List all discussions in a course**
 ```bash
-# Read the discussion and replies
-canvas-cli course cs101 discuss view 555123
+canvas course cs101 discuss list
+```
 
-# Reply to the main prompt
-canvas-cli course cs101 discuss reply 555123 "Here is my response..."
+**View a discussion thread (Prompt + Replies)**
+```bash
+canvas course cs101 discuss view 555123
+```
 
-# Reply to a specific student (threaded)
-canvas-cli course cs101 discuss reply 555123 "I agree!" --entry-id 999888
+**Post a reply to the main prompt**
+```bash
+canvas course cs101 discuss reply 555123 "Here is my response..."
+```
+
+**Reply to a specific student (Threaded)**
+```bash
+# First, find the Entry ID by running 'discuss view'
+canvas course cs101 discuss view 555123
+
+# Then reply using that Entry ID
+canvas course cs101 discuss reply 555123 "I agree with this point!" --entry-id 999888
+```
+
+**Reply using a local file**
+```bash
+canvas course cs101 discuss reply 555123 --file my_response.md
 ```
 
 ## Getting Help
