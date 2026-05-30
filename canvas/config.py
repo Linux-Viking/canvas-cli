@@ -46,6 +46,22 @@ def resolve_alias(name_or_id):
     aliases = config.get('aliases', {})
     return aliases.get(str(name_or_id), str(name_or_id))
 
+def resolve_course_id(course_id):
+    """
+    Resolves a course ID, automatically adding sis_course_id prefix
+     if it's alphanumeric and not a known alias or internal numeric ID.
+    """
+    resolved = resolve_alias(course_id)
+    
+    # If it's already a prefixed ID, numeric, or 'self', leave it alone
+    if (not resolved.isdigit() and 
+        ':' not in resolved and 
+        resolved.lower() != 'self' and
+        len(resolved) > 0):
+        return f"sis_course_id:{resolved}"
+    
+    return resolved
+
 def get_url():
     """Helper to get just the URL with a default."""
     config = load_config()

@@ -132,7 +132,7 @@ def list_courses():
 def course(ctx, course_id):
     """Interact with a specific course."""
     ctx.ensure_object(dict)
-    ctx.obj['COURSE_ID'] = config.resolve_alias(course_id)
+    ctx.obj['COURSE_ID'] = config.resolve_course_id(course_id)
 
 @course.command(name="list")
 @click.pass_context
@@ -266,14 +266,15 @@ def item_details(ctx):
          secho(f"Network Error: {e}", fg="red")
          raise click.Abort()
 
-@cli.command()
+@cli.command(name="submit")
 @click.argument('filepath', type=click.Path(exists=True))
 @click.argument('course_id')
 @click.argument('assignment_id')
 def submit(filepath, course_id, assignment_id):
     """Submit a file to an assignment (3-step file upload)."""
     # Resolve aliases for display in the confirmation prompt
-    resolved_course_id = config.resolve_alias(course_id)
+    resolved_course_id = config.resolve_course_id(course_id)
+
     resolved_assignment_id = config.resolve_alias(assignment_id)
     
     secho(f"--- PRE-SUBMISSION CHECK ---", fg="yellow", bold=True)
