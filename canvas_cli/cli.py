@@ -21,9 +21,9 @@ class HelpGroup(click.Group):
 
 
 @click.group(cls=HelpGroup, context_settings=CONTEXT_SETTINGS)
-@click.version_option(__version__, "-V", "--version", prog_name="canvas-cli")
+@click.version_option(__version__, "-V", "--version")
 def cli():
-    """A command line interface for Canvas LMS (canvas-cli)."""
+    """A command line interface for Canvas LMS (canvas-term)."""
     api.reset_client()
 
 
@@ -167,7 +167,7 @@ def item_details(ctx):
     if "content_id" in data:
         click.echo(f"\nIf you want to submit this item, use Assignment ID: {data['content_id']}")
         click.secho(
-            f"Command: canvas-cli submit <filepath> {course_id} {data['content_id']}", fg="yellow"
+            f"Command: canvas-term submit <filepath> {course_id} {data['content_id']}", fg="yellow"
         )
 
         if data.get("type") == "Assignment":

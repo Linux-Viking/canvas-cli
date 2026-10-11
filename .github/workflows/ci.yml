@@ -56,8 +56,9 @@ jobs:
       - name: Smoke-test install with pipx
         run: |
           pipx install dist/*.whl
-          canvas-cli --version
-          canvas-cli --help
+          canvas-term --version
+          canvas-term --help
+          canvas-cli --version  # legacy alias
 
   secrets:
     runs-on: ubuntu-latest
