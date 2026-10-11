@@ -1,0 +1,7 @@
+[extend]
+useDefault = true
+
+# The leak-regression tests use a deliberately token-shaped fake value.
+[allowlist]
+description = "Fake canary token used by tests/test_token_leaks.py"
+regexes = ['''CANARYtokenDoNotLeak''']

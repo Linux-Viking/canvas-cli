@@ -1,0 +1,52 @@
+# Publishes to PyPI when a GitHub release is published, using trusted publishing
+# (OIDC), so no PyPI API token is stored in the repository.
+#
+# One-time setup on PyPI (Account > Publishing > Add a new pending publisher):
+#   PyPI project name: canvas-term
+#   Owner:             Linux-Viking
+#   Repository:        canvas-cli
+#   Workflow name:     publish.yml
+#   Environment:       pypi
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - run: python -m pip install --upgrade pip build twine
+      - run: python -m build
+      - run: twine check --strict dist/*
+      - name: Check the tag matches the package version
+        run: |
+          version=$(python -c "import canvas_cli; print(canvas_cli.__version__)")
+          test "${GITHUB_REF_NAME#v}" = "$version" || { echo "Tag $GITHUB_REF_NAME != version $version"; exit 1; }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/canvas-term/
+    permissions:
+      id-token: write  # required for trusted publishing
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
