@@ -1,6 +1,8 @@
 # canvas-cli
 
 [![CI](https://github.com/Linux-Viking/canvas-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/Linux-Viking/canvas-cli/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/canvas-term)](https://pypi.org/project/canvas-term/)
+[![Python](https://img.shields.io/pypi/pyversions/canvas-term)](https://pypi.org/project/canvas-term/)
 
 A lightning-fast, terminal-based operating system for your degree.
 
@@ -25,12 +27,6 @@ Requires **Python 3.11 or newer**.
 [pipx](https://pipx.pypa.io/) installs the CLI into its own isolated environment and puts `canvas-cli` on your `PATH`.
 
 ```bash
-pipx install git+https://github.com/Linux-Viking/canvas-cli.git
-```
-
-Once it's published on PyPI, it will be:
-
-```bash
 pipx install canvas-term
 ```
 
@@ -39,7 +35,13 @@ pipx install canvas-term
 ### pip
 
 ```bash
-python3 -m pip install --user git+https://github.com/Linux-Viking/canvas-cli.git
+python3 -m pip install --user canvas-term
+```
+
+### Latest development version
+
+```bash
+pipx install git+https://github.com/Linux-Viking/canvas-cli.git
 ```
 
 ### Upgrading and uninstalling
