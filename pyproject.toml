@@ -47,9 +47,9 @@ dev = [
 canvas-cli = "canvas_cli.cli:cli"
 
 [project.urls]
-Homepage = "https://github.com/Linux-Viking/canvas-cli"
-Issues = "https://github.com/Linux-Viking/canvas-cli/issues"
-Source = "https://github.com/Linux-Viking/canvas-cli"
+Homepage = "https://github.com/Linux-Viking/canvas-term"
+Issues = "https://github.com/Linux-Viking/canvas-term/issues"
+Source = "https://github.com/Linux-Viking/canvas-term"
 
 [tool.setuptools.dynamic]
 version = { attr = "canvas_cli.__version__" }
