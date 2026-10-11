@@ -4,7 +4,7 @@
 # One-time setup on PyPI (Account > Publishing > Add a new pending publisher):
 #   PyPI project name: canvas-term
 #   Owner:             Linux-Viking
-#   Repository:        canvas-cli
+#   Repository:        canvas-term
 #   Workflow name:     publish.yml
 #   Environment:       pypi
 name: Publish to PyPI

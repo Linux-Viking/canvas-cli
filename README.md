@@ -1,6 +1,6 @@
 # canvas-cli
 
-[![CI](https://github.com/Linux-Viking/canvas-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/Linux-Viking/canvas-cli/actions/workflows/ci.yml)
+[![CI](https://github.com/Linux-Viking/canvas-term/actions/workflows/ci.yml/badge.svg)](https://github.com/Linux-Viking/canvas-term/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/canvas-term)](https://pypi.org/project/canvas-term/)
 [![Python](https://img.shields.io/pypi/pyversions/canvas-term)](https://pypi.org/project/canvas-term/)
 
@@ -41,7 +41,7 @@ python3 -m pip install --user canvas-term
 ### Latest development version
 
 ```bash
-pipx install git+https://github.com/Linux-Viking/canvas-cli.git
+pipx install git+https://github.com/Linux-Viking/canvas-term.git
 ```
 
 ### Upgrading and uninstalling
@@ -207,13 +207,13 @@ Commands exit with status `0` on success and non-zero on failure, so you can use
 * The token is sent only over `https://`, and only to your configured Canvas host. File downloads and uploads to external storage (e.g. S3) never receive it.
 * Treat your token like a password: it grants full access to your Canvas account. Set an expiry date when you generate it and revoke it in Canvas settings if it's ever exposed.
 
-Found a security issue? Please open a private [security advisory](https://github.com/Linux-Viking/canvas-cli/security/advisories/new) rather than a public issue.
+Found a security issue? Please open a private [security advisory](https://github.com/Linux-Viking/canvas-term/security/advisories/new) rather than a public issue.
 
 ## Development
 
 ```bash
-git clone https://github.com/Linux-Viking/canvas-cli.git
-cd canvas-cli
+git clone https://github.com/Linux-Viking/canvas-term.git
+cd canvas-term
 python3 -m venv .venv
 source .venv/bin/activate
 pip install --editable ".[dev]"
