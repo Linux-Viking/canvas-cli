@@ -15,8 +15,25 @@ A lightning-fast, terminal-based operating system for your degree.
 * **Grades**: Check your current score and letter grade for every course.
 * **Discussion Boards**: Read prompts and replies, and post top-level or threaded replies.
 * **Bulk File Downloader**: Download all slides, syllabi, and readings from a course with one command.
-* **Inbox**: Read your unread Canvas messages.
+* **Inbox**: List your unread Canvas messages.
 * **Aliases**: Map Canvas IDs (like `123456`) to memorable names (like `cs101`).
+
+## Quick start
+
+```bash
+pipx install canvas-term
+canvas-term config     # paste your Canvas URL and API token (see Configuration)
+canvas-term grades
+```
+
+```text
+Course Name                         | Grade | Score
+-------------------------------------------------------
+CS 101: Intro to Programming        | A     | 94.2
+MATH 221: Calculus II               | B+    | 88.5
+ENGL 110: College Writing           | A-    | 91.0
+HIST 150: World History             | N/A   | N/A
+```
 
 ## Installation
 
@@ -34,9 +51,15 @@ pipx install canvas-term
 
 ### pip
 
+Many Linux distributions block system-wide `pip` installs ([PEP 668](https://peps.python.org/pep-0668/)), so install into a virtual environment:
+
 ```bash
-python3 -m pip install --user canvas-term
+python3 -m venv ~/.venvs/canvas-term
+~/.venvs/canvas-term/bin/pip install canvas-term
+~/.venvs/canvas-term/bin/canvas-term --version
 ```
+
+Add `~/.venvs/canvas-term/bin` to your `PATH`, or symlink `canvas-term` into a directory that's already on it.
 
 ### Latest development version
 
@@ -229,8 +252,9 @@ CI runs linting, tests on Python 3.11–3.14 (plus macOS and Windows), a build a
 
 Releases are published to PyPI by `.github/workflows/publish.yml` using [trusted publishing](https://docs.pypi.org/trusted-publishers/), so no PyPI API token is stored anywhere.
 
-1. Bump `__version__` in `canvas_cli/__init__.py`.
-2. Create a GitHub release tagged `v<version>` (e.g. `v0.2.0`).
+1. Bump `__version__` in `canvas_cli/__init__.py` and merge to `main`.
+2. Create a GitHub release with a matching tag: `gh release create v<version> --generate-notes`. The workflow fails if the tag and `__version__` differ.
+3. Approve the `pypi` deployment in the Actions tab. The publish job waits for a reviewer.
 
 ## Safety First
 
