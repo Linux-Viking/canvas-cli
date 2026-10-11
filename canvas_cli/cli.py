@@ -3,6 +3,7 @@ import mimetypes
 import os
 import re
 import sys
+from datetime import datetime
 
 import click
 
@@ -339,25 +340,40 @@ def set_alias(name, target_id):
     click.secho(f"Alias '{name}' -> '{target_id}' saved.", fg="green")
 
 
+def format_due(iso_timestamp, tz=None):
+    """Format a Canvas ISO 8601 timestamp as e.g. 'Tue Oct 14 23:59' in local time."""
+    if not iso_timestamp:
+        return "No due date"
+    try:
+        due = datetime.fromisoformat(iso_timestamp)
+    except ValueError:
+        return iso_timestamp[:20]
+    return due.astimezone(tz).strftime("%a %b %d %H:%M")
+
+
 @cli.command(name="todo")
 def todo():
-    """List upcoming assignments."""
-    todos = api.get_client().get_all("/api/v1/users/self/todo")
+    """List upcoming assignments, soonest first."""
+    client = api.get_client()
+    todos = client.get_all("/api/v1/users/self/todo")
+    courses = client.get_all("/api/v1/courses", params={"enrollment_state": "active"})
+    course_names = {c["id"]: c.get("course_code") or c.get("name") for c in courses if "id" in c}
 
-    click.secho(f"{'Due Date':<20} | {'Course':<15} | {'Assignment'}", fg="blue", bold=True)
-    click.echo("-" * 70)
+    rows = []
     for t in todos:
-        if "assignment" in t:
-            due = t["assignment"].get("due_at") or "No Date"
-            course_id = t.get("course_id", "Unknown")
-            title = t["assignment"].get("name", "Unknown")
-        else:
-            # Quizzes and other to-do types have a different structure
-            due = "Unknown"
-            course_id = t.get("course_id", "Unknown")
-            title = (t.get("quiz") or {}).get("title") or t.get("type", "Unknown item")
+        # Assignments and quizzes carry their details under different keys
+        item = t.get("assignment") or t.get("quiz") or {}
+        title = item.get("name") or item.get("title") or t.get("type", "Unknown item")
+        course = course_names.get(t.get("course_id")) or str(t.get("course_id", "Unknown"))
+        rows.append((item.get("due_at"), course, title))
 
-        click.echo(f"{str(due)[:20]:<20} | {str(course_id):<15} | {title}")
+    # Soonest first; items without a due date go last
+    rows.sort(key=lambda row: (row[0] is None, row[0] or ""))
+
+    click.secho(f"{'Due':<16} | {'Course':<15} | {'Assignment'}", fg="blue", bold=True)
+    click.echo("-" * 70)
+    for due_at, course, title in rows:
+        click.echo(f"{format_due(due_at):<16} | {course[:15]:<15} | {title}")
 
 
 @cli.command(name="grades")

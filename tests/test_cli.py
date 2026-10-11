@@ -1,7 +1,9 @@
+from datetime import UTC
+
 import pytest
 
 from canvas_cli import __version__, config
-from canvas_cli.cli import cli, safe_filename, strip_tags
+from canvas_cli.cli import cli, format_due, safe_filename, strip_tags
 
 from .conftest import BASE_URL, CANARY_TOKEN, api_url
 
@@ -101,17 +103,55 @@ def test_grades(configured, runner, mocked):
     assert "N/A" in result.output
 
 
-def test_todo(configured, runner, mocked):
+def test_todo_shows_course_codes_sorted_by_due_date(configured, runner, mocked):
     mocked.get(
         api_url("/api/v1/users/self/todo"),
         json=[
             {"course_id": 1, "assignment": {"name": "Essay", "due_at": "2026-10-20T23:59:00Z"}},
-            {"course_id": 2, "type": "submitting", "quiz": {"title": "Quiz 3"}},
+            {
+                "course_id": 2,
+                "type": "submitting",
+                "quiz": {"title": "Quiz 3", "due_at": "2026-10-15T12:00:00Z"},
+            },
+            {"course_id": 1, "assignment": {"name": "Reading", "due_at": None}},
+            {"course_id": 99, "assignment": {"name": "Orphan", "due_at": "2026-10-30T12:00:00Z"}},
+        ],
+    )
+    mocked.get(
+        api_url("/api/v1/courses"),
+        json=[
+            {"id": 1, "name": "College Writing", "course_code": "ENGL 110"},
+            {"id": 2, "name": "Calculus II"},
         ],
     )
     result = runner.invoke(cli, ["todo"])
-    assert result.exit_code == 0
-    assert "Essay" in result.output and "Quiz 3" in result.output
+    assert result.exit_code == 0, result.output
+
+    lines = result.output.splitlines()[2:]
+    assert [line.split("|")[2].strip() for line in lines] == [
+        "Quiz 3",
+        "Essay",
+        "Orphan",
+        "Reading",
+    ]
+    assert "ENGL 110" in lines[1]  # course_code preferred
+    assert "Calculus II" in lines[0]  # falls back to name
+    assert "| 99 " in lines[2]  # unknown course falls back to ID
+    assert "No due date" in lines[3]
+    assert "T23:59" not in result.output  # no raw ISO timestamps
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("2026-10-14T23:59:00Z", "Wed Oct 14 23:59"),
+        ("2026-10-14T23:59:00-04:00", "Thu Oct 15 03:59"),
+        (None, "No due date"),
+        ("not-a-date", "not-a-date"),
+    ],
+)
+def test_format_due(value, expected):
+    assert format_due(value, tz=UTC) == expected
 
 
 def test_course_alias_resolution(configured, runner, mocked):
