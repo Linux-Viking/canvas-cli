@@ -59,7 +59,7 @@ class CanvasClient:
         if self._token is None:
             self._token = config.get_token()
         if not self._token:
-            raise AuthError("No API token configured. Run 'canvas-cli config' first.")
+            raise AuthError("No API token configured. Run 'canvas-term config' first.")
         return self._token
 
     def is_canvas_url(self, url):
@@ -115,7 +115,7 @@ class CanvasClient:
                     continue
                 raise CanvasError(
                     f"Could not connect to {host}. Check your network connection and "
-                    "Canvas URL ('canvas-cli config')."
+                    "Canvas URL ('canvas-term config')."
                 ) from e
             except requests.exceptions.RequestException as e:
                 raise CanvasError(f"Network error talking to {host}: {self._redact(e)}") from e
@@ -166,7 +166,7 @@ class CanvasClient:
             return AuthError(
                 "Canvas rejected your API token (401 Unauthorized). It may have expired or "
                 "been revoked. Generate a new token in Canvas (Account > Settings > "
-                "New Access Token) and run 'canvas-cli config'."
+                "New Access Token) and run 'canvas-term config'."
             )
         if status == 403:
             return CanvasError(f"Permission denied (403) for {path}: {detail}")

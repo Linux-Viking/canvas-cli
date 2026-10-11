@@ -53,7 +53,7 @@ def test_applies_timeout(client, monkeypatch):
 
 def test_missing_token_is_auth_error(mocked):
     client = api.CanvasClient(base_url=BASE_URL)
-    with pytest.raises(AuthError, match="canvas-cli config"):
+    with pytest.raises(AuthError, match="canvas-term config"):
         client.request("GET", "/api/v1/courses")
     assert len(mocked.calls) == 0
 
@@ -66,7 +66,7 @@ def test_401_explains_expired_token(client, mocked):
     )
     with pytest.raises(AuthError, match="expired") as exc:
         client.request("GET", "/api/v1/courses")
-    assert "canvas-cli config" in exc.value.message
+    assert "canvas-term config" in exc.value.message
     assert len(mocked.calls) == 1  # never retried
 
 

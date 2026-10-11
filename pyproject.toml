@@ -44,6 +44,8 @@ dev = [
 ]
 
 [project.scripts]
+canvas-term = "canvas_cli.cli:cli"
+# Original command name, kept so existing installs and scripts keep working.
 canvas-cli = "canvas_cli.cli:cli"
 
 [project.urls]

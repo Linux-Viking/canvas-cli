@@ -25,7 +25,7 @@ def test_help_aliases(runner):
 def test_unconfigured_command_explains_setup(runner, mocked):
     result = runner.invoke(cli, ["list"])
     assert result.exit_code == 1
-    assert "canvas-cli config" in result.output
+    assert "canvas-term config" in result.output
 
 
 # --- config ---
